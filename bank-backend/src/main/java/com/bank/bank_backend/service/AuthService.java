@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.bank.bank_backend.dto.AuthRequest;
 import com.bank.bank_backend.dto.AuthResponse;
 import com.bank.bank_backend.dto.RegisterRequest;
+import com.bank.bank_backend.entity.Role;
 import com.bank.bank_backend.entity.User;
 import com.bank.bank_backend.mapper.UserMapper;
 import com.bank.bank_backend.repository.UserRepository;
@@ -48,7 +49,7 @@ public class AuthService {
         User user = UserMapper.toEntity(req);
 
         user.setPassword(encoder.encode(req.getPassword()));
-        user.setRole("ROLE_USER");
+        user.setRole(Role.ROLE_USER);
 
         userRepo.save(user);
 
