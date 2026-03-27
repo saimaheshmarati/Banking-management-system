@@ -3,22 +3,23 @@ package com.bank.bank_backend.security;
 import java.security.Key;
 import java.util.Date;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
-@Component
-public class JwtUtil {
+@Service
+public class JwtService {
 
-    private String SECRET = "bank_secret_bank_secret_bank_secret_123";
+    private final String SECRET = System.getProperty("JWT_SECRET", "defaultSecretKey12345678901234567890");
 
-    private Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(key)
                 .compact();
     }

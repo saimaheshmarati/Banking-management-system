@@ -2,15 +2,10 @@ package com.bank.bank_backend.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import com.bank.bank_backend.dto.TransferRequest;
+import com.bank.bank_backend.dto.*;
 import com.bank.bank_backend.entity.Transaction;
 import com.bank.bank_backend.service.TransactionService;
 
@@ -25,24 +20,27 @@ public class TransactionController {
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam String accNo,
-                          @RequestParam Double amount) {
-        return service.deposit(accNo, amount);
+    public ResponseEntity<ApiResponse> deposit(@RequestParam String accNo,
+                                               @RequestParam Double amount) {
+        service.deposit(accNo, amount);
+        return ResponseEntity.ok(new ApiResponse("Deposit Successful"));
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam String accNo,
-                           @RequestParam Double amount) {
-        return service.withdraw(accNo, amount);
+    public ResponseEntity<ApiResponse> withdraw(@RequestParam String accNo,
+                                                @RequestParam Double amount) {
+        service.withdraw(accNo, amount);
+        return ResponseEntity.ok(new ApiResponse("Withdraw Successful"));
     }
 
     @PostMapping("/transfer")
-    public String transfer(@RequestBody TransferRequest req) {
-        return service.transfer(req);
+    public ResponseEntity<ApiResponse> transfer(@RequestBody TransferRequest req) {
+        service.transfer(req);
+        return ResponseEntity.ok(new ApiResponse("Transfer Successful"));
     }
 
     @GetMapping("/history/{accNo}")
-    public List<Transaction> history(@PathVariable String accNo) {
-        return service.getHistory(accNo);
+    public ResponseEntity<List<Transaction>> history(@PathVariable String accNo) {
+        return ResponseEntity.ok(service.getHistory(accNo));
     }
 }

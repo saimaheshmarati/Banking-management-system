@@ -1,11 +1,10 @@
 package com.bank.bank_backend.service;
 
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 
 import com.bank.bank_backend.entity.Account;
 import com.bank.bank_backend.entity.User;
+import com.bank.bank_backend.mapper.AccountMapper;
 import com.bank.bank_backend.repository.AccountRepository;
 import com.bank.bank_backend.repository.UserRepository;
 
@@ -27,17 +26,13 @@ public class AccountService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Account acc = new Account();
-        acc.setAccountNumber(UUID.randomUUID().toString());
-        acc.setAccountType("SAVINGS");
-        acc.setBalance(0.0);
-        acc.setStatus("ACTIVE");
-        acc.setUser(user);
+        // ✅ USING MAPPER
+        Account acc = AccountMapper.createAccount(user);
 
         return accountRepo.save(acc);
     }
 
-    // ✅ ADD THIS METHOD (MISSING)
+    // ✅ Get Account
     public Account getAccount(String accNo) {
         return accountRepo.findByAccountNumber(accNo)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
