@@ -1,5 +1,9 @@
 package com.bank.bank_backend.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -7,42 +11,48 @@ import com.bank.bank_backend.dto.AuthRequest;
 import com.bank.bank_backend.dto.AuthResponse;
 import com.bank.bank_backend.dto.RegisterRequest;
 import com.bank.bank_backend.entity.User;
+import com.bank.bank_backend.mapper.UserMapper;
 import com.bank.bank_backend.repository.UserRepository;
-import com.bank.bank_backend.security.JwtUtil;
+import com.bank.bank_backend.security.JwtService;
 
 @Service
 public class AuthService {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final UserRepository userRepo;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final BCryptPasswordEncoder encoder;
 
+    private final AuthenticationManager authenticationManager;
+
     public AuthService(UserRepository userRepo,
-                       JwtUtil jwtUtil,
-                       BCryptPasswordEncoder encoder) {
+                       JwtService jwtService,
+                       BCryptPasswordEncoder encoder,
+                       AuthenticationManager authenticationManager) {
+
         this.userRepo = userRepo;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
         this.encoder = encoder;
+        this.authenticationManager = authenticationManager;
     }
 
     // ✅ REGISTER
+ // ✅ REGISTER
     public String register(RegisterRequest req) {
 
-        // 🔴 Check if email exists
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
 
-        User user = new User();
-        user.setName(req.getName());
-        user.setEmail(req.getEmail());
+        User user = UserMapper.toEntity(req);
 
-        // 🔐 Encrypt password
         user.setPassword(encoder.encode(req.getPassword()));
-
         user.setRole("ROLE_USER");
 
         userRepo.save(user);
+
+        log.info("User registered: {}", req.getEmail());
 
         return "User Registered Successfully";
     }
@@ -50,15 +60,16 @@ public class AuthService {
     // ✅ LOGIN
     public AuthResponse login(AuthRequest req) {
 
-        User user = userRepo.findByEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                req.getEmail(),
+                req.getPassword()
+            )
+        );
 
-        // 🔐 Check encrypted password
-        if (!encoder.matches(req.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
-        }
+        log.info("User logged in: {}", req.getEmail());
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtService.generateToken(req.getEmail());
 
         return new AuthResponse(token, "Login Successful");
     }

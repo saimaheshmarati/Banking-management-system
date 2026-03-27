@@ -1,6 +1,5 @@
 package com.bank.bank_backend.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.bank.bank_backend.dto.TransferRequest;
 import com.bank.bank_backend.entity.Account;
 import com.bank.bank_backend.entity.Transaction;
+import com.bank.bank_backend.mapper.TransactionMapper;
 import com.bank.bank_backend.repository.AccountRepository;
 import com.bank.bank_backend.repository.TransactionRepository;
 
@@ -29,17 +29,13 @@ public class TransactionService {
     public String deposit(String accNo, Double amount) {
 
         Account acc = accountRepo.findByAccountNumber(accNo)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
         acc.setBalance(acc.getBalance() + amount);
         accountRepo.save(acc);
 
-        Transaction txn = new Transaction();
-        txn.setType("DEPOSIT");
-        txn.setAmount(amount);
-        txn.setTimestamp(LocalDateTime.now());
-        txn.setToAccount(accNo);
-
+        // ✅ USING MAPPER
+        Transaction txn = TransactionMapper.deposit(accNo, amount);
         txnRepo.save(txn);
 
         return "Deposit Successful";
@@ -49,7 +45,7 @@ public class TransactionService {
     public String withdraw(String accNo, Double amount) {
 
         Account acc = accountRepo.findByAccountNumber(accNo)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
         if (acc.getBalance() < amount) {
             throw new RuntimeException("Insufficient balance");
@@ -58,12 +54,8 @@ public class TransactionService {
         acc.setBalance(acc.getBalance() - amount);
         accountRepo.save(acc);
 
-        Transaction txn = new Transaction();
-        txn.setType("WITHDRAW");
-        txn.setAmount(amount);
-        txn.setTimestamp(LocalDateTime.now());
-        txn.setFromAccount(accNo);
-
+        // ✅ USING MAPPER
+        Transaction txn = TransactionMapper.withdraw(accNo, amount);
         txnRepo.save(txn);
 
         return "Withdraw Successful";
@@ -74,10 +66,10 @@ public class TransactionService {
     public String transfer(TransferRequest req) {
 
         Account sender = accountRepo.findByAccountNumber(req.getFromAccount())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Sender account not found"));
 
         Account receiver = accountRepo.findByAccountNumber(req.getToAccount())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Receiver account not found"));
 
         if (sender.getBalance() < req.getAmount()) {
             throw new RuntimeException("Insufficient balance");
@@ -89,13 +81,8 @@ public class TransactionService {
         accountRepo.save(sender);
         accountRepo.save(receiver);
 
-        Transaction txn = new Transaction();
-        txn.setType("TRANSFER");
-        txn.setAmount(req.getAmount());
-        txn.setTimestamp(LocalDateTime.now());
-        txn.setFromAccount(req.getFromAccount());
-        txn.setToAccount(req.getToAccount());
-
+        // ✅ USING MAPPER
+        Transaction txn = TransactionMapper.transfer(req);
         txnRepo.save(txn);
 
         return "Transfer Successful";
@@ -103,9 +90,6 @@ public class TransactionService {
 
     // ✅ History
     public List<Transaction> getHistory(String accNo) {
-        return txnRepo.findAll().stream()
-                .filter(t -> accNo.equals(t.getFromAccount())
-                          || accNo.equals(t.getToAccount()))
-                .toList();
+        return txnRepo.findByFromAccountOrToAccount(accNo, accNo);
     }
 }

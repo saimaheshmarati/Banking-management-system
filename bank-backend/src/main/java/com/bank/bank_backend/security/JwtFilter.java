@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.bank.bank_backend.entity.User;
+import com.bank.bank_backend.repository.UserRepository;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +21,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService; // ✅ FIXED
+    private final UserRepository userRepo;
 
-    public JwtFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    public JwtFilter(JwtService jwtService, UserRepository userRepo) { // ✅ FIXED
+        this.jwtService = jwtService;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -37,13 +42,16 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             try {
-                String email = jwtUtil.extractEmail(token);
+                String email = jwtService.extractEmail(token); // ✅ FIXED
+
+                User user = userRepo.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email,
                                 null,
-                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                List.of(new SimpleGrantedAuthority(user.getRole()))
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);

@@ -1,11 +1,18 @@
 package com.bank.bank_backend.controller;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.bank.bank_backend.dto.ApiResponse;
 import com.bank.bank_backend.dto.AuthRequest;
 import com.bank.bank_backend.dto.AuthResponse;
 import com.bank.bank_backend.dto.RegisterRequest;
 import com.bank.bank_backend.service.AuthService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,12 +25,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest req) {
-        return authService.register(req);
+    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest req) {
+        authService.register(req);
+        return ResponseEntity.ok(new ApiResponse("User Registered Successfully"));
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest req) {
-        return authService.login(req);
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
+        return ResponseEntity.ok(authService.login(req));
     }
 }

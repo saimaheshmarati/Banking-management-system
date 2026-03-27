@@ -1,5 +1,6 @@
 package com.bank.bank_backend.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.bank.bank_backend.entity.Account;
@@ -16,12 +17,12 @@ public class AccountController {
     }
 
     @PostMapping("/create")
-    public Account create(@RequestParam String email) {
-        return service.createAccount(email);
+    public ResponseEntity<Account> create(@RequestParam String email) {
+        return ResponseEntity.ok(service.createAccount(email));
     }
 
     @GetMapping("/{accNo}")
-    public Account get(@PathVariable String accNo) {
-        return service.getAccount(accNo);
+    public ResponseEntity<Account> get(@PathVariable String accNo) {
+        return ResponseEntity.ok(service.getAccount(accNo));
     }
 }
