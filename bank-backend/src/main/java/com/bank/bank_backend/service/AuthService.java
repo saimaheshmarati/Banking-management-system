@@ -38,7 +38,7 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
-    // ✅ REGISTER
+
  // ✅ REGISTER
     public String register(RegisterRequest req) {
 

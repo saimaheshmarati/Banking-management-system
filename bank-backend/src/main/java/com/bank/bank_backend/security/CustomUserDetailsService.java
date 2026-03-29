@@ -11,6 +11,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepo;
 
+    private User user;
+    
+    public User getUser() {
+        return user;
+    }
+
     public CustomUserDetailsService(UserRepository userRepo) {
         this.userRepo = userRepo;
     }
@@ -21,12 +27,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return org.springframework.security.core.userdetails.User
-                .builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                // ✅ FIX HERE
-                .roles(user.getRole().name().replace("ROLE_", ""))
-                .build();
+        return new CustomUserDetails(user);
     }
 }

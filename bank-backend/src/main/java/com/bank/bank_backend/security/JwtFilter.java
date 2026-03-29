@@ -29,6 +29,7 @@ public class JwtFilter extends OncePerRequestFilter {
         this.userRepo = userRepo;
     }
 
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                    HttpServletResponse response,
@@ -46,12 +47,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 User user = userRepo.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("User not found"));
+                CustomUserDetails userDetails = new CustomUserDetails(user);
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                email,
+                                userDetails,   // ✅ FIXED
                                 null,
-                                List.of(new SimpleGrantedAuthority(user.getRole().name()))
+                                userDetails.getAuthorities()
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);

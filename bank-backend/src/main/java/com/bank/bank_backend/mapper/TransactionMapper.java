@@ -2,36 +2,59 @@ package com.bank.bank_backend.mapper;
 
 import java.time.LocalDateTime;
 
-import com.bank.bank_backend.dto.TransferRequest;
+import com.bank.bank_backend.dto.TransactionResponse;
+import com.bank.bank_backend.entity.Account;
 import com.bank.bank_backend.entity.Transaction;
 
 public class TransactionMapper {
 
-    public static Transaction deposit(String accNo, Double amount) {
+    // Deposit
+    public static Transaction deposit(Account acc, Double amount) {
+
         Transaction txn = new Transaction();
-        txn.setType("DEPOSIT");
+        txn.setType("CREDIT");
         txn.setAmount(amount);
         txn.setTimestamp(LocalDateTime.now());
-        txn.setToAccount(accNo);
+        txn.setToAccount(acc);
+
         return txn;
     }
 
-    public static Transaction withdraw(String accNo, Double amount) {
+    // Withdraw
+    public static Transaction withdraw(Account acc, Double amount) {
+
         Transaction txn = new Transaction();
-        txn.setType("WITHDRAW");
+        txn.setType("DEBIT");
         txn.setAmount(amount);
         txn.setTimestamp(LocalDateTime.now());
-        txn.setFromAccount(accNo);
+        txn.setFromAccount(acc);
+
         return txn;
     }
 
-    public static Transaction transfer(TransferRequest req) {
+    // Transfer
+    public static Transaction transfer(Account from, Account to, Double amount) {
+
         Transaction txn = new Transaction();
         txn.setType("TRANSFER");
-        txn.setAmount(req.getAmount());
+        txn.setAmount(amount);
         txn.setTimestamp(LocalDateTime.now());
-        txn.setFromAccount(req.getFromAccount());
-        txn.setToAccount(req.getToAccount());
+        txn.setFromAccount(from);
+        txn.setToAccount(to);
+
         return txn;
+    }
+
+    // ENTITY -> RESPONSE DTO
+    public static TransactionResponse toResponse(Transaction txn) {
+
+        return TransactionResponse.builder()
+                .id(txn.getId())
+                .type(txn.getType())
+                .amount(txn.getAmount())
+                .timestamp(txn.getTimestamp())
+                .fromAccount(txn.getFromAccount() != null ? txn.getFromAccount().getAccountNumber() : null)
+                .toAccount(txn.getToAccount() != null ? txn.getToAccount().getAccountNumber() : null)
+                .build();
     }
 }

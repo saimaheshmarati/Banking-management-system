@@ -1,12 +1,11 @@
 package com.bank.bank_backend.controller;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.bank.bank_backend.dto.*;
-import com.bank.bank_backend.entity.Transaction;
+import com.bank.bank_backend.dto.AmountRequest;
+import com.bank.bank_backend.dto.TransferRequest;
+import com.bank.bank_backend.dto.TransactionResponse;
 import com.bank.bank_backend.service.TransactionService;
 
 @RestController
@@ -19,28 +18,21 @@ public class TransactionController {
         this.service = service;
     }
 
+    // Deposit
     @PostMapping("/deposit")
-    public ResponseEntity<ApiResponse> deposit(@RequestParam String accNo,
-                                               @RequestParam Double amount) {
-        service.deposit(accNo, amount);
-        return ResponseEntity.ok(new ApiResponse("Deposit Successful"));
+    public ResponseEntity<TransactionResponse> deposit(@RequestBody AmountRequest req) {
+        return ResponseEntity.ok(service.deposit(req));
     }
 
+    // Withdraw
     @PostMapping("/withdraw")
-    public ResponseEntity<ApiResponse> withdraw(@RequestParam String accNo,
-                                                @RequestParam Double amount) {
-        service.withdraw(accNo, amount);
-        return ResponseEntity.ok(new ApiResponse("Withdraw Successful"));
+    public ResponseEntity<TransactionResponse> withdraw(@RequestBody AmountRequest req) {
+        return ResponseEntity.ok(service.withdraw(req));
     }
 
+    // Transfer
     @PostMapping("/transfer")
-    public ResponseEntity<ApiResponse> transfer(@RequestBody TransferRequest req) {
-        service.transfer(req);
-        return ResponseEntity.ok(new ApiResponse("Transfer Successful"));
-    }
-
-    @GetMapping("/history/{accNo}")
-    public ResponseEntity<List<Transaction>> history(@PathVariable String accNo) {
-        return ResponseEntity.ok(service.getHistory(accNo));
+    public ResponseEntity<TransactionResponse> transfer(@RequestBody TransferRequest req) {
+        return ResponseEntity.ok(service.transfer(req));
     }
 }

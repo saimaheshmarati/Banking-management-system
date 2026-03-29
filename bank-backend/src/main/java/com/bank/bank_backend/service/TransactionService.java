@@ -1,12 +1,15 @@
 package com.bank.bank_backend.service;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import com.bank.bank_backend.dto.TransferRequest;
+import com.bank.bank_backend.dto.AmountRequest;
+import com.bank.bank_backend.dto.TransactionResponse;
 import com.bank.bank_backend.entity.Account;
 import com.bank.bank_backend.entity.Transaction;
+import com.bank.bank_backend.entity.User;
+import com.bank.bank_backend.exception.ResourceNotFoundException;
+import com.bank.bank_backend.exception.InsufficientBalanceException;
 import com.bank.bank_backend.mapper.TransactionMapper;
 import com.bank.bank_backend.repository.AccountRepository;
 import com.bank.bank_backend.repository.TransactionRepository;
@@ -25,54 +28,52 @@ public class TransactionService {
         this.txnRepo = txnRepo;
     }
 
-    // ✅ Deposit
-    public String deposit(String accNo, Double amount) {
+    // Deposit
+    public TransactionResponse deposit(AmountRequest req) {
 
-        Account acc = accountRepo.findByAccountNumber(accNo)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        Account acc = accountRepo.findByAccountNumber(req.getAccountNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        acc.setBalance(acc.getBalance() + amount);
+        acc.setBalance(acc.getBalance() + req.getAmount());
         accountRepo.save(acc);
 
-        // ✅ USING MAPPER
-        Transaction txn = TransactionMapper.deposit(accNo, amount);
+        Transaction txn = TransactionMapper.deposit(acc, req.getAmount());
         txnRepo.save(txn);
 
-        return "Deposit Successful";
+        return TransactionMapper.toResponse(txn);
     }
 
-    // ✅ Withdraw
-    public String withdraw(String accNo, Double amount) {
+    // Withdraw
+    public TransactionResponse withdraw(AmountRequest req) {
 
-        Account acc = accountRepo.findByAccountNumber(accNo)
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        Account acc = accountRepo.findByAccountNumber(req.getAccountNumber())
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
-        if (acc.getBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+        if (acc.getBalance() < req.getAmount()) {
+            throw new InsufficientBalanceException("Insufficient balance");
         }
 
-        acc.setBalance(acc.getBalance() - amount);
+        acc.setBalance(acc.getBalance() - req.getAmount());
         accountRepo.save(acc);
 
-        // ✅ USING MAPPER
-        Transaction txn = TransactionMapper.withdraw(accNo, amount);
+        Transaction txn = TransactionMapper.withdraw(acc, req.getAmount());
         txnRepo.save(txn);
 
-        return "Withdraw Successful";
+        return TransactionMapper.toResponse(txn);
     }
 
-    // ✅ Transfer (ACID)
+    // Transfer
     @Transactional
-    public String transfer(TransferRequest req) {
+    public TransactionResponse transfer(TransferRequest req) {
 
         Account sender = accountRepo.findByAccountNumber(req.getFromAccount())
-                .orElseThrow(() -> new RuntimeException("Sender account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sender account not found"));
 
         Account receiver = accountRepo.findByAccountNumber(req.getToAccount())
-                .orElseThrow(() -> new RuntimeException("Receiver account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Receiver account not found"));
 
         if (sender.getBalance() < req.getAmount()) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance");
         }
 
         sender.setBalance(sender.getBalance() - req.getAmount());
@@ -81,15 +82,26 @@ public class TransactionService {
         accountRepo.save(sender);
         accountRepo.save(receiver);
 
-        // ✅ USING MAPPER
-        Transaction txn = TransactionMapper.transfer(req);
+        Transaction txn = TransactionMapper.transfer(sender, receiver, req.getAmount());
         txnRepo.save(txn);
 
-        return "Transfer Successful";
+        return TransactionMapper.toResponse(txn);
     }
+    
+    public Double checkBalance(String accountNumber, User loggedInUser) {
 
-    // ✅ History
-    public List<Transaction> getHistory(String accNo) {
-        return txnRepo.findByFromAccountOrToAccount(accNo, accNo);
+        Account acc = accountRepo.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+
+        // SECURITY CHECK
+        if (!acc.getUser().getId().equals(loggedInUser.getId())) {
+            throw new RuntimeException("Not allowed to access this account");
+        }
+
+        if (!"ACTIVE".equalsIgnoreCase(acc.getStatus())) {
+            throw new RuntimeException("Account is not active");
+        }
+
+        return acc.getBalance();
     }
 }

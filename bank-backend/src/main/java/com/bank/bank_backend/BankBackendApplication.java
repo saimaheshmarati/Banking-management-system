@@ -10,11 +10,13 @@ public class BankBackendApplication {
 
     public static void main(String[] args) {
 
-        // ✅ LOAD .env FILE HERE
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure()
+                .directory(System.getProperty("user.dir"))
+                .filename(".env")
+                .load();
 
-        System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
         System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
+        System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
 
         SpringApplication.run(BankBackendApplication.class, args);
     }
