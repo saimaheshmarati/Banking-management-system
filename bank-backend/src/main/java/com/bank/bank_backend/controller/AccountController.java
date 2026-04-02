@@ -1,5 +1,7 @@
 package com.bank.bank_backend.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +38,24 @@ public class AccountController {
         return ResponseEntity.ok(service.getAccount(accNo));
     }
     
-    @GetMapping("/balance/{accNo}")
-    public ResponseEntity<Double> checkBalance(
-            @PathVariable String accNo,
+//    @GetMapping("/balance/{accNo}")
+//    public ResponseEntity<Double> checkBalance(
+//            @PathVariable String accNo,
+//            @AuthenticationPrincipal CustomUserDetails userDetails) {
+//
+//        User user = userDetails.getUser();
+//
+//        return ResponseEntity.ok(service.checkBalance(accNo, user));
+//    }
+//    
+    @GetMapping("/myAccounts")
+    public ResponseEntity<List<AccountResponse>> getUserAccounts(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         User user = userDetails.getUser();
 
-        return ResponseEntity.ok(service.checkBalance(accNo, user));
+        List<AccountResponse> accounts = service.getAccountsByUser(user);
+
+        return ResponseEntity.ok(accounts);
     }
 }

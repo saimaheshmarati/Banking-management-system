@@ -1,5 +1,7 @@
 package com.bank.bank_backend.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,4 +37,14 @@ public class TransactionController {
     public ResponseEntity<TransactionResponse> transfer(@RequestBody TransferRequest req) {
         return ResponseEntity.ok(service.transfer(req));
     }
+    
+    //transaction history
+
+    @GetMapping("/{accountNumber}")
+    public List<TransactionResponse> getTransactions(
+            @PathVariable String accountNumber){
+
+        return service.getTransactions(accountNumber);
+    }
+
 }

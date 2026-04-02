@@ -1,5 +1,7 @@
 package com.bank.bank_backend.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.bank.bank_backend.dto.AccountResponse;
@@ -82,20 +84,31 @@ public class AccountService {
     }
     
     
-    public Double checkBalance(String accountNumber, User loggedInUser) {
+//    //checkbalance
+//    public Double checkBalance(String accountNumber, User loggedInUser) {
+//
+//        Account acc = accountRepo.findByAccountNumber(accountNumber)
+//                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+//
+//        // SECURITY CHECK
+//        if (!acc.getUser().getId().equals(loggedInUser.getId())) {
+//            throw new RuntimeException("Not allowed to access this account");
+//        }
+//
+//        if (!"ACTIVE".equalsIgnoreCase(acc.getStatus())) {
+//            throw new RuntimeException("Account is not active");
+//        }
+//
+//        return acc.getBalance();
+//    }
+    
+    //get my accounts
+    public List<AccountResponse> getAccountsByUser(User user) {
 
-        Account acc = accountRepo.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+        List<Account> accounts = accountRepo.findByUser(user);
 
-        // SECURITY CHECK
-        if (!acc.getUser().getId().equals(loggedInUser.getId())) {
-            throw new RuntimeException("Not allowed to access this account");
-        }
-
-        if (!"ACTIVE".equalsIgnoreCase(acc.getStatus())) {
-            throw new RuntimeException("Account is not active");
-        }
-
-        return acc.getBalance();
+        return accounts.stream()
+                .map(AccountMapper::mapToResponse)
+                .toList();
     }
 }

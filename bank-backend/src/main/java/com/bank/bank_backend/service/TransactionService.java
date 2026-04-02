@@ -1,5 +1,7 @@
 package com.bank.bank_backend.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.bank.bank_backend.dto.TransferRequest;
@@ -88,20 +90,22 @@ public class TransactionService {
         return TransactionMapper.toResponse(txn);
     }
     
-    public Double checkBalance(String accountNumber, User loggedInUser) {
+    //getalltransactions
+    public List<TransactionResponse> getTransactions(String accountNumber){
 
-        Account acc = accountRepo.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
+        Account account = accountRepo
+                .findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
-        // SECURITY CHECK
-        if (!acc.getUser().getId().equals(loggedInUser.getId())) {
-            throw new RuntimeException("Not allowed to access this account");
-        }
+        List<Transaction> transactions =
+                txnRepo.findByFromAccountOrToAccount(account, account);
 
-        if (!"ACTIVE".equalsIgnoreCase(acc.getStatus())) {
-            throw new RuntimeException("Account is not active");
-        }
-
-        return acc.getBalance();
+        return transactions
+                .stream()
+                .map(TransactionMapper::toResponse)
+                .toList();
     }
+
+
+
 }
