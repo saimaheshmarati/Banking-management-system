@@ -1,7 +1,6 @@
 package com.bank.bank_backend.security;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -16,35 +15,29 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService; // ✅ FIXED
+    private final JwtService jwtService;
     private final UserRepository userRepo;
 
-    public JwtFilter(JwtService jwtService, UserRepository userRepo) { // ✅ FIXED
+    public JwtFilter(JwtService jwtService, UserRepository userRepo) {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
     }
-    
-    
 
-    
+    // 🚀 Skip JWT filter for authentication endpoints
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().startsWith("/auth/");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                   HttpServletResponse response,
-                                   FilterChain filterChain)
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
-    	
-    	String path = request.getServletPath();
-
-    	// Skip authentication endpoints
-    	if (path.startsWith("/auth")) {
-    	    filterChain.doFilter(request, response);
-    	    return;
-    	}
 
         String header = request.getHeader("Authorization");
 
@@ -53,15 +46,17 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = header.substring(7);
 
             try {
-                String email = jwtService.extractEmail(token); // ✅ FIXED
+
+                String email = jwtService.extractEmail(token);
 
                 User user = userRepo.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("User not found"));
+
                 CustomUserDetails userDetails = new CustomUserDetails(user);
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,   // ✅ FIXED
+                                userDetails,
                                 null,
                                 userDetails.getAuthorities()
                         );
@@ -69,8 +64,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             } catch (Exception e) {
+
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
+
             }
         }
 

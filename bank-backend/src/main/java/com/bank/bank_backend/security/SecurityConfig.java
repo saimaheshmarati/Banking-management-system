@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,7 +28,6 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
-    // ADD THIS (VERY IMPORTANT)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -37,19 +37,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
+
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/transactions/**").hasRole("USER") // ✅ role based
-                .anyRequest().authenticated()
+                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/transactions/**").hasRole("USER")
+                    .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -58,10 +60,13 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("https://bank-frontend-sigma.vercel.app"));
 
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+
         configuration.setAllowedHeaders(List.of("*"));
+
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
