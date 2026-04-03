@@ -49,7 +49,7 @@ public class AuthService {
         User user = UserMapper.toEntity(req);
 
         user.setPassword(encoder.encode(req.getPassword()));
-        user.setRole(Role.ROLE_USER);
+        user.setRole(Role.USER);
 
         userRepo.save(user);
 
