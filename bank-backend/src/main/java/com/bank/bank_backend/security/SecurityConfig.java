@@ -55,10 +55,8 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Remove the trailing slash
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
- 
-        
+        configuration.setAllowedOrigins(List.of("https://bank-frontend-sigma.vercel.app"));
+
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
