@@ -28,6 +28,8 @@ public class JwtFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
         this.userRepo = userRepo;
     }
+    
+    
 
     
     @Override
@@ -35,6 +37,14 @@ public class JwtFilter extends OncePerRequestFilter {
                                    HttpServletResponse response,
                                    FilterChain filterChain)
             throws ServletException, IOException {
+    	
+    	String path = request.getServletPath();
+
+    	// Skip authentication endpoints
+    	if (path.startsWith("/auth")) {
+    	    filterChain.doFilter(request, response);
+    	    return;
+    	}
 
         String header = request.getHeader("Authorization");
 
